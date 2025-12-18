@@ -1,4 +1,109 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Speed Rush – Arcade</title>
+<style>
+body{margin:0;background:#111;color:#fff;font-family:Arial;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+h1{margin:6px}
+#hud{margin-bottom:6px}
+canvas{background:#333;border:4px solid #fff;border-radius:12px;touch-action:none}
+.controls{display:flex;gap:15px;margin-top:10px}
+button{padding:12px 18px;font-size:18px;border:none;border-radius:10px;cursor:pointer}
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75)}
+.menu{background:#222;padding:30px;border-radius:16px;text-align:center}
+.menu h2{margin-bottom:10px}
+.menu button{width:200px;margin:8px 0}
+#nitro{background:#ff5252;color:#fff}
+</style>
+</head>
+<body>
+<h1>🚗 Speed Rush</h1>
+<div id="hud" style="display:none">
+Score: <span id="score">0</span> |
+Best: <span id="best">0</span> |
+Level: <span id="level">1</span>
+</div>
+<canvas id="game" width="360" height="600"></canvas>
+
+
+<!-- START SCREEN -->
+<div id="startScreen" class="overlay">
+<div class="menu">
+<h2>Speed Rush</h2>
+<button id="startBtn">▶ Start Game</button>
+</div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOverScreen" class="overlay" style="display:none">
+<div class="menu">
+<h2>Game Over</h2>
+<p>Score: <span id="finalScore">0</span></p>
+<p>Best: <span id="finalBest">0</span></p>
+<button id="restartBtn">🔄 Restart</button>
+</div>
+</div>
+
+
+<div class="controls" id="controls" style="display:none">
+<button id="left">⬅️</button>
+<button id="nitro">💨 Nitro</button>
+<button id="right">➡️</button>
+</div>
+
+
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score');
+const bestEl=document.getElementById('best');
+const levelEl=document.getElementById('level');
+const startScreen=document.getElementById('startScreen');
+const startBtn=document.getElementById('startBtn');
+const gameOverScreen=document.getElementById('gameOverScreen');
+const finalScore=document.getElementById('finalScore');
+const finalBest=document.getElementById('finalBest');
+const restartBtn=document.getElementById('restartBtn');
+const controls=document.getElementById('controls');
+const left=document.getElementById('left');
+const right=document.getElementById('right');
+const nitro=document.getElementById('nitro');
+
+
+let score=0;
+let bestScore=Number(localStorage.getItem('bestScore')||0);
+let level=1;
+let speed=4;
+let gameStarted=false;
+let nitroActive=false;
+
+
+bestEl.textContent=bestScore;
+
+
+const lanes=[60,155,250];
+let currentLane=1;
+const car={x:lanes[1],y:470,w:50,h:90};
+const obstacles=[];
+
+// AUDIO
+const bgMusic=new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_7c3d07c5b2.mp3');
+bgMusic.loop=true;bgMusic.volume=0.35;
+const crashSound=new Audio('https://cdn.pixabay.com/download/audio/2022/03/10/audio_6c1c6a9c0a.mp3');
+
+
+function drawRoad(){
+ctx.fillStyle='#444';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.strokeStyle='#fff';
+ctx.setLineDash([20,20]);
+ctx.lineWidth=4;
+lanes.forEach(l=>{
+ctx.beginPath();
+ctx.moveTo(l+25,0);
+ctx.lineTo(l+25,600);
 ctx.stroke();
 });
 ctx.setLineDash([]);
@@ -52,7 +157,6 @@ finalScore.textContent=score;
 finalBest.textContent=bestScore;
 gameOverScreen.style.display='flex';
 }
-
 
 function update(){
 if(!gameStarted){requestAnimationFrame(update);return;}
